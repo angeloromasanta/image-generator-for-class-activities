@@ -1,54 +1,49 @@
-import { useState } from 'react';
-import './App.css';
+import { useState } from 'react'
+import './App.css'
 
 function App() {
-  const [prompt, setPrompt] = useState('');
-  const [image, setImage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [prompt, setPrompt] = useState('')
+  const [image, setImage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const generateImage = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(
-        'https://api.cors.lol/?url=https://api.replicate.com/v1/models/recraft-ai/recraft-v3/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait',
-          },
-          body: JSON.stringify({
-            input: {
-              size: '1365x1024',
-              prompt: prompt,
-            },
-          }),
-        }
-      );
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input: {
+            size: "1365x1024",
+            prompt: prompt
+          }
+        })
+      })
 
       if (!response.ok) {
-        throw new Error('Failed to generate image');
+        throw new Error('Failed to generate image')
       }
 
-      const data = await response.json();
+      const data = await response.json()
       if (data.output && data.output[0]) {
-        setImage(data.output[0]);
+        setImage(data.output[0])
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Image Generator</h1>
-
+      
       <div className="mb-4">
         <input
           type="text"
@@ -67,19 +62,19 @@ function App() {
         {loading ? 'Generating...' : 'Generate Image'}
       </button>
 
-      {error && <div className="text-red-500 mt-4">Error: {error}</div>}
+      {error && (
+        <div className="text-red-500 mt-4">
+          Error: {error}
+        </div>
+      )}
 
       {image && (
         <div className="mt-6">
-          <img
-            src={image}
-            alt={prompt}
-            className="max-w-full rounded shadow-lg"
-          />
+          <img src={image} alt={prompt} className="max-w-full rounded shadow-lg" />
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
