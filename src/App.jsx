@@ -33,10 +33,11 @@ function App() {
       const data = await response.json()
       console.log('API Response:', data); // Debug log
 
-      if (data.output && Array.isArray(data.output) && data.output.length > 0) {
-        setImage(data.output[0])
+      // Check if response has the direct output URL
+      if (data.output && typeof data.output === 'string') {
+        setImage(data.output);
       } else {
-        setError('No image generated');
+        setError('No image URL in response');
         console.error('Unexpected API response:', data);
       }
     } catch (err) {
@@ -83,7 +84,15 @@ function App() {
 
       {image && (
         <div className="mt-6">
-          <img src={image} alt={prompt} className="max-w-full rounded shadow-lg" />
+          <img 
+            src={image} 
+            alt={prompt} 
+            className="max-w-full rounded shadow-lg"
+            onError={(e) => {
+              console.error('Image loading error');
+              setError('Failed to load the generated image');
+            }}
+          />
         </div>
       )}
     </div>
