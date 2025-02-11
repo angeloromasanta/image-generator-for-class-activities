@@ -6,17 +6,14 @@ export default async function handler(req, res) {
     try {
       // Initial request to start the prediction
       const response = await fetch(
-        'https://api.replicate.com/v1/predictions',
+        'https://api.replicate.com/v1/models/recraft-ai/recraft-v3/predictions',
         {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            version: "2a302c6d5927b04c3c88133ccf472755c5108fcef22ad3646d8c8d13ba2e1b31",
-            input: req.body.input
-          })
+          body: JSON.stringify(req.body)
         }
       );
   
