@@ -26,15 +26,22 @@ function App() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate image')
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate image');
       }
 
       const data = await response.json()
-      if (data.output && data.output[0]) {
+      console.log('API Response:', data); // Debug log
+
+      if (data.output && Array.isArray(data.output) && data.output.length > 0) {
         setImage(data.output[0])
+      } else {
+        setError('No image generated');
+        console.error('Unexpected API response:', data);
       }
     } catch (err) {
       setError(err.message)
+      console.error('Error details:', err);
     } finally {
       setLoading(false)
     }
@@ -65,6 +72,12 @@ function App() {
       {error && (
         <div className="text-red-500 mt-4">
           Error: {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="mt-4 text-blue-500">
+          Generating your image... This may take a minute...
         </div>
       )}
 
