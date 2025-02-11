@@ -13,7 +13,7 @@ function App() {
       setError(null);
 
       const response = await fetch(
-        'https://api.replicate.com/v1/models/recraft-ai/recraft-v3/predictions',
+        'https://api.cors.lol/?url=https://api.replicate.com/v1/models/recraft-ai/recraft-v3/predictions',
         {
           method: 'POST',
           headers: {
