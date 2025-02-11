@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     try {
       // Initial request to start the prediction
       const response = await fetch(
-        'https://api.replicate.com/v1/models/recraft-ai/recraft-v3/predictions',
+        'https://api.replicate.com/v1/models/google/imagen-3-fast/predictions',
         {
           method: 'POST',
           headers: {
