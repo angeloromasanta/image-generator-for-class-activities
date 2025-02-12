@@ -6,7 +6,7 @@ import { db, storage } from '../firebase';
 function GalleryView() {
   const [headlines, setHeadlines] = useState([]);
   const [isClearing, setIsClearing] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   const [animatingHeadlines, setAnimatingHeadlines] = useState(new Set());
 
   useEffect(() => {
@@ -260,7 +260,13 @@ function GalleryView() {
                 <video 
                   src={newestHeadline.animationUrl}
                   alt={newestHeadline.headline}
-                  onClick={() => setSelectedImage(newestHeadline.animationUrl)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedMedia({
+                      url: newestHeadline.animationUrl,
+                      type: 'video'
+                    });
+                  }}
                   autoPlay
                   loop
                   muted
@@ -271,7 +277,10 @@ function GalleryView() {
                 <img 
                   src={newestHeadline.imageUrl}
                   alt={newestHeadline.headline}
-                  onClick={() => setSelectedImage(newestHeadline.imageUrl)}
+                  onClick={() => setSelectedMedia({
+                    url: newestHeadline.imageUrl,
+                    type: 'image'
+                  })}
                 />
               )}
               <div className="headline-overlay">
@@ -324,7 +333,13 @@ function GalleryView() {
                 <video 
                   src={item.animationUrl}
                   alt={item.headline}
-                  onClick={() => setSelectedImage(item.animationUrl)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedMedia({
+                      url: item.animationUrl,
+                      type: 'video'
+                    });
+                  }}
                   autoPlay
                   loop
                   muted
@@ -335,7 +350,10 @@ function GalleryView() {
                 <img 
                   src={item.imageUrl}
                   alt={item.headline}
-                  onClick={() => setSelectedImage(item.imageUrl)}
+                  onClick={() => setSelectedMedia({
+                    url: item.imageUrl,
+                    type: 'image'
+                  })}
                 />
               )}
               <div className="headline-overlay">
@@ -376,26 +394,36 @@ function GalleryView() {
         </button>
       </footer>
 
-      {selectedImage && (
-        <div className="modal-overlay" onClick={() => setSelectedImage(null)}>
-          {selectedImage.endsWith('.mp4') ? (
-            <video 
-              src={selectedImage} 
-              className="modal-video"
-              autoPlay
-              loop
-              muted
-              playsInline
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <img 
-              src={selectedImage} 
-              alt="Expanded view" 
-              className="modal-image"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
+      {selectedMedia && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => setSelectedMedia(null)}
+        >
+          <div className="modal-content">
+            <button 
+              className="modal-close"
+              onClick={() => setSelectedMedia(null)}
+            >
+              ×
+            </button>
+            {selectedMedia.type === 'video' ? (
+              <video 
+                src={selectedMedia.url} 
+                className="modal-video"
+                autoPlay
+                loop
+                controls
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img 
+                src={selectedMedia.url} 
+                alt="Expanded view" 
+                className="modal-image"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
