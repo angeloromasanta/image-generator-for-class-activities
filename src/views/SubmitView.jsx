@@ -1,26 +1,48 @@
+
+// SubmitView.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+
+// Model configurations
+const MODELS = {
+  imagen: {
+    id: 'google/imagen-3-fast',
+    config: {
+      size: "1365x1024"
+    }
+  },
+  flux: {
+    id: 'black-forest-labs/flux-1.1-pro',
+    config: {
+      aspect_ratio: "1:1",
+      output_format: "webp",
+      output_quality: 80,
+      safety_tolerance: 2,
+      prompt_upsampling: true
+    }
+  }
+};
 
 function SubmitView() {
   const [headline, setHeadline] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  // Currently using Flux model
+  const selectedModel = MODELS.flux;
 
   const convertImageUrlToBase64 = async (imageUrl) => {
     try {
-      // Fetch the image from the temporary URL
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch image');
       }
 
-      // Get the image as a blob
       const blob = await response.blob();
 
-      // Convert blob to base64
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
@@ -39,13 +61,14 @@ function SubmitView() {
       
       const enhancedPrompt = `Generate a vivid, realistic image depicting this future scenario: "${headline}". Make it detailed and imaginative, focusing on the key elements of the scene.`;
       
-      // Generate image using API
+      // Generate image using API with model configuration
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          model: selectedModel,
           input: {
-            size: "1365x1024",
+            ...selectedModel.config,
             prompt: enhancedPrompt
           }
         })
@@ -59,13 +82,11 @@ function SubmitView() {
       const data = await response.json();
 
       if (data.output && typeof data.output === 'string') {
-        // Convert the temporary URL to base64
         const base64Image = await convertImageUrlToBase64(data.output);
 
-        // Store the base64 string in Firestore
         await addDoc(collection(db, 'headlines'), {
           headline,
-          imageData: base64Image, // Store base64 string instead of URL
+          imageData: base64Image,
           timestamp: Timestamp.now()
         });
 
