@@ -93,78 +93,89 @@ const animateImage = async (headline) => {
       isAnimating: true
     });
 
-    // Initial request
-    const response = await fetch('/api/animate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        promptImage: headline.imageUrl,
-        promptText: headline.headline,
-        headlineId: headline.id
-      })
-    });
+    const startAnimation = async () => {
+      const response = await fetch('/api/animate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          promptImage: headline.imageUrl,
+          promptText: headline.headline,
+          headlineId: headline.id
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error('Animation request failed');
-    }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Animation failed');
+      }
 
-    const result = await response.json();
+      const result = await response.json();
+      
+      if (result.status === 'processing') {
+        // Start polling
+        let attempts = 0;
+        const maxAttempts = 30; // 30 attempts * 2 seconds = 60 seconds max
+        
+        while (attempts < maxAttempts) {
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between polls
+          
+          const pollResponse = await fetch('/api/check-animation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: result.id
+            })
+          });
+          
+          if (!pollResponse.ok) {
+            throw new Error('Polling failed');
+          }
+          
+          const pollResult = await pollResponse.json();
+          
+          if (pollResult.status === 'success' && pollResult.videoData) {
+            return pollResult;
+          } else if (pollResult.status === 'failed') {
+            throw new Error('Animation processing failed');
+          }
+          // Continue polling if still processing
+        }
+        throw new Error('Animation timed out after 60 seconds');
+      }
+      
+      return result;
+    };
+
+    const animationResult = await startAnimation();
     
-    if (result.status === 'processing') {
-      // Start polling
-      let attempts = 0;
-      const maxAttempts = 30; // 5 minutes total (10s * 30)
+    if (animationResult.status === 'success' && animationResult.videoData) {
+      // Convert base64 to blob
+      const videoBlob = await fetch(`data:${animationResult.contentType};base64,${animationResult.videoData}`)
+        .then(res => res.blob());
       
-      while (attempts < maxAttempts) {
-        attempts++;
-        
-        // Wait 10 seconds between polls
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        
-        const pollResponse = await fetch(`/api/check-animation/${result.id}`, {
-          method: 'GET'
-        });
-        
-        if (!pollResponse.ok) {
-          throw new Error('Polling request failed');
-        }
-        
-        const pollResult = await pollResponse.json();
-        
-        if (pollResult.status === 'success' && pollResult.videoData) {
-          // Convert base64 to blob and upload to Firebase
-          const videoBlob = await fetch(`data:${pollResult.contentType};base64,${pollResult.videoData}`)
-            .then(res => res.blob());
-          
-          const videoRef = ref(storage, `animations/${headline.id}.mp4`);
-          await uploadBytes(videoRef, videoBlob, {
-            contentType: 'video/mp4'
-          });
-          
-          const videoUrl = await getDownloadURL(videoRef);
-          
-          await updateDoc(doc(db, 'headlines', headline.id), {
-            animationUrl: videoUrl
-          });
-          
-          break;
-        }
-        
-        if (pollResult.status === 'failed') {
-          throw new Error(pollResult.error || 'Animation failed');
-        }
-      }
+      // Upload to Firebase Storage
+      const videoRef = ref(storage, `animations/${headline.id}.mp4`);
+      await uploadBytes(videoRef, videoBlob, {
+        contentType: 'video/mp4'
+      });
       
-      if (attempts >= maxAttempts) {
-        throw new Error('Animation timed out');
-      }
+      // Get the download URL
+      const videoUrl = await getDownloadURL(videoRef);
+      
+      // Update the Firebase document with our stored video URL
+      await updateDoc(doc(db, 'headlines', headline.id), {
+        animationUrl: videoUrl
+      });
     }
     
   } catch (error) {
     console.error('Animation error:', error);
-    alert('Failed to animate image. Please try again.');
+    alert('Failed to animate image: ' + error.message);
   } finally {
     setAnimatingHeadlines(prev => {
       const newSet = new Set(prev);
@@ -176,7 +187,6 @@ const animateImage = async (headline) => {
     });
   }
 };
-
 
 
 
