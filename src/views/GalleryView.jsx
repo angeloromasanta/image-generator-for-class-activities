@@ -105,24 +105,25 @@ const animateImage = async (headline) => {
           headlineId: headline.id
         })
       });
-
+    
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Animation failed');
       }
-
+    
       const result = await response.json();
       
       if (result.status === 'processing') {
         // Start polling
         let attempts = 0;
-        const maxAttempts = 30; // 30 attempts * 2 seconds = 60 seconds max
+        const maxAttempts = 30;
         
         while (attempts < maxAttempts) {
           attempts++;
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between polls
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          const pollResponse = await fetch('/api/check-animation', {
+          // Updated URL format - remove any trailing slash
+          const pollResponse = await fetch('/api/check-animation', {  // Note: removed trailing slash
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -130,10 +131,14 @@ const animateImage = async (headline) => {
             body: JSON.stringify({
               id: result.id
             })
+          }).catch(error => {
+            console.error('Polling request failed:', error);
+            throw new Error('Network error during polling');
           });
           
           if (!pollResponse.ok) {
-            throw new Error('Polling failed');
+            const errorData = await pollResponse.json();
+            throw new Error(`Polling failed: ${errorData.message || pollResponse.statusText}`);
           }
           
           const pollResult = await pollResponse.json();
@@ -141,9 +146,8 @@ const animateImage = async (headline) => {
           if (pollResult.status === 'success' && pollResult.videoData) {
             return pollResult;
           } else if (pollResult.status === 'failed') {
-            throw new Error('Animation processing failed');
+            throw new Error(pollResult.message || 'Animation processing failed');
           }
-          // Continue polling if still processing
         }
         throw new Error('Animation timed out after 60 seconds');
       }
