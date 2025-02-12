@@ -8,6 +8,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<SubmitView />} />
+      <Route path="/view" element={<AudienceGalleryView />} />
       <Route path="/gallery" element={<GalleryView />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

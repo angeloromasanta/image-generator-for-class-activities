@@ -92,7 +92,7 @@ function SubmitView() {
 
       setHeadline('');
       setTeamName('');
-      
+      navigate('/view');
     } catch (err) {
       setError(err.message);
     } finally {
