@@ -1,10 +1,24 @@
 
-// src/components/SubmissionView.jsx
+// SubmissionView.jsx
 import { useState } from 'react'
+import { initializeApp } from 'firebase/app'
+import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore'
 import { Link } from 'react-router-dom'
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
 
-export default function SubmissionView({ db }) {
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export function SubmissionView() {
   const [headline, setHeadline] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -44,8 +58,6 @@ export default function SubmissionView({ db }) {
         });
 
         setHeadline('')
-        // Redirect to gallery after successful submission
-        window.location.href = '/gallery'
       } else {
         throw new Error('No image URL in response');
       }
@@ -67,6 +79,39 @@ export default function SubmissionView({ db }) {
           </Link>
         </div>
         
+        <div className="p-8 space-y-4">
+      <h1 className="text-3xl font-bold text-blue-600">Tailwind Test Page</h1>
+      
+      {/* Background Colors */}
+      <div className="flex gap-4">
+        <div className="w-16 h-16 bg-red-500 rounded-lg"></div>
+        <div className="w-16 h-16 bg-blue-500 rounded-lg"></div>
+        <div className="w-16 h-16 bg-green-500 rounded-lg"></div>
+      </div>
+
+      {/* Text Styles */}
+      <div className="space-y-2">
+        <p className="text-xl text-purple-600 font-bold">Bold Purple Text</p>
+        <p className="text-sm text-gray-500 italic">Small Gray Italic Text</p>
+      </div>
+
+      {/* Border and Shadow */}
+      <div className="border-2 border-orange-500 shadow-lg p-4 rounded-xl">
+        Box with Border and Shadow
+      </div>
+
+      {/* Hover and Transform */}
+      <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all">
+        Hover Me
+      </button>
+
+      {/* Flex and Grid */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-yellow-200 p-2 text-center">1</div>
+        <div className="bg-yellow-300 p-2 text-center">2</div>
+        <div className="bg-yellow-400 p-2 text-center">3</div>
+      </div>
+    </div>
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -105,5 +150,6 @@ export default function SubmissionView({ db }) {
         )}
       </div>
     </div>
+    
   )
 }
