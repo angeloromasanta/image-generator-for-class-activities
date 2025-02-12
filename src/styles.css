@@ -28,18 +28,14 @@ body {
 .header-content {
   text-align: center;
   margin-bottom: 0.3rem;
-  position: relative;  /* Add this */
+  position: relative;
 }
 
-
 .qr-code {
-  width: 200px;  /* or your desired size */
+  width: 200px;
   height: 200px;
   margin-bottom: 2rem;
 }
-
-
-
 
 .newspaper-header h1 {
   font-family: var(--header-font);
@@ -99,7 +95,8 @@ body {
   transition: transform 0.3s ease;
 }
 
-.headline-card:hover, .featured-headline:hover {
+.headline-card:hover, 
+.featured-headline:hover {
   transform: translateY(-5px);
 }
 
@@ -126,6 +123,22 @@ body {
 
 .headline-content {
   position: relative;
+}
+
+.headline-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.headline-card:hover .headline-controls,
+.featured-headline:hover .headline-controls {
+  opacity: 1;
 }
 
 .breaking-news {
@@ -158,72 +171,69 @@ body {
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
+.headline-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.team-name {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 2px 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
 .headline-overlay time {
   font-size: 0.875rem;
   color: rgba(255,255,255,0.8);
   font-style: italic;
 }
 
-/* Navigation Links */
-.submit-link {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
+/* Buttons and Controls */
+.remove-button,
+.animate-button {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--accent-color);
-  text-decoration: none;
-  border: 2px solid var(--accent-color);
-  border-radius: 4px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  font-weight: bold;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.2s ease;
 }
 
-.submit-link:hover {
+.animate-button {
+  transition-delay: 0.05s;
+}
+
+.remove-button:hover,
+.animate-button:hover:not(:disabled) {
   background-color: var(--accent-color);
   color: white;
 }
 
-/* Footer */
-.gallery-footer {
-  text-align: center;
-  padding: 2rem;
-  border-top: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-}
-
-
-.clear-button {
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-  color: #666;
-  background-color: transparent;
-  border: 1px solid #666;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.clear-button:hover:not(:disabled) {
-  background-color: #666;
-  color: white;
-}
-
-.clear-button:disabled {
-  opacity: 0.5;
+.animate-button:disabled {
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
-/* Empty State */
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 3rem;
-  color: #666;
-  font-style: italic;
-  font-size: 1.25rem;
+.headline-card:hover .remove-button,
+.headline-card:hover .animate-button,
+.featured-headline:hover .remove-button,
+.featured-headline:hover .animate-button {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Submit View Styles */
@@ -245,6 +255,10 @@ body {
   margin-bottom: 2rem;
 }
 
+.input-group + .input-group {
+  margin-top: 1.5rem;
+}
+
 .input-group label {
   display: block;
   margin-bottom: 0.75rem;
@@ -253,19 +267,20 @@ body {
   color: var(--primary-color);
 }
 
-.input-group input {
+.input-group input[type="text"] {
   width: 100%;
   padding: 1rem;
   font-size: 1.1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-family: var(--body-font);
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.input-group input:focus {
+.input-group input[type="text"]:focus {
   outline: none;
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.1);
 }
 
 .submit-button {
@@ -292,24 +307,121 @@ body {
   cursor: not-allowed;
 }
 
-.gallery-link {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  color: var(--accent-color);
-  text-decoration: none;
-  border: 2px solid var(--accent-color);
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+  padding: 2rem;
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+}
+
+.modal-image,
+.modal-video {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
   border-radius: 4px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  font-size: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--accent-color);
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Animation States */
+.animating-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-button.loading {
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+}
+
+/* Footer */
+.gallery-footer {
+  text-align: center;
+  padding: 2rem;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.clear-button {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  color: #666;
+  background-color: transparent;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.gallery-link:hover {
-  background-color: var(--accent-color);
+.clear-button:hover:not(:disabled) {
+  background-color: #666;
   color: white;
 }
 
+.clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Messages */
 .error-message {
   margin-top: 1.5rem;
   padding: 1rem;
@@ -327,53 +439,18 @@ body {
   font-style: italic;
   font-family: var(--header-font);
   font-size: 1.1rem;
-}
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  cursor: pointer;
-}
-
-.modal-image {
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-}
-
-.remove-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-color);
-  font-weight: bold;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  gap: 8px;
 }
 
-.remove-button:hover {
-  background-color: var(--accent-color);
-  color: white;
-}
-
-.headline-card:hover .remove-button,
-.featured-headline:hover .remove-button {
-  opacity: 1;
+/* Empty State */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-style: italic;
+  font-size: 1.25rem;
 }
