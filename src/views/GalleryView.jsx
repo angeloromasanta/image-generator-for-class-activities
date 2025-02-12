@@ -1,7 +1,7 @@
 // GalleryView.jsx
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, writeBatch, doc, updateDoc } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
+import { ref, deleteObject ,   uploadBytes,  getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
 function GalleryView() {
@@ -54,62 +54,97 @@ function GalleryView() {
     }
   };
 
-  const removeHeadline = async (id, imageUrl) => {
+
+
+// Update the removeHeadline function to also clean up animations
+const removeHeadline = async (id, imageUrl) => {
+  try {
+    // Delete image from Storage
+    const imageRef = ref(storage, imageUrl);
+    await deleteObject(imageRef);
+    
+    // Check if there's an animation and delete it too
+    const videoRef = ref(storage, `animations/${id}.mp4`);
     try {
-      const imageRef = ref(storage, imageUrl);
-      await deleteObject(imageRef);
-      await writeBatch(db).delete(doc(db, 'headlines', id)).commit();
+      await deleteObject(videoRef);
     } catch (error) {
-      console.error('Error removing headline:', error);
-      alert('Failed to remove headline. Please try again.');
+      // Ignore error if animation doesn't exist
+      if (error.code !== 'storage/object-not-found') {
+        throw error;
+      }
     }
-  };
+    
+    // Delete the document
+    await writeBatch(db).delete(doc(db, 'headlines', id)).commit();
+  } catch (error) {
+    console.error('Error removing headline:', error);
+    alert('Failed to remove headline. Please try again.');
+  }
+};
 
   const animateImage = async (headline) => {
-    if (animatingHeadlines.has(headline.id)) return;
+  if (animatingHeadlines.has(headline.id)) return;
+  
+  setAnimatingHeadlines(prev => new Set([...prev, headline.id]));
+  
+  try {
+    await updateDoc(doc(db, 'headlines', headline.id), {
+      isAnimating: true
+    });
+
+    const response = await fetch('/api/animate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        promptImage: headline.imageUrl,
+        promptText: headline.headline,
+        headlineId: headline.id
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Animation failed');
+    }
+
+    const result = await response.json();
     
-    setAnimatingHeadlines(prev => new Set([...prev, headline.id]));
-    
-    try {
-      await updateDoc(doc(db, 'headlines', headline.id), {
-        isAnimating: true
-      });
-
-      const response = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.REACT_APP_RUNWAYML_API_SECRET}`,
-          'X-Runway-Version': '2024-11-06'
-        },
-        body: JSON.stringify({
-          promptImage: headline.imageUrl,
-          promptText: headline.headline,
-          model: 'gen3a_turbo'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Animation failed');
-      }
-
-      // Handle animation response...
+    if (result.status === 'success' && result.videoData) {
+      // Convert base64 to blob
+      const videoBlob = await fetch(`data:${result.contentType};base64,${result.videoData}`)
+        .then(res => res.blob());
       
-    } catch (error) {
-      console.error('Animation error:', error);
-      alert('Failed to animate image. Please try again.');
-    } finally {
-      setAnimatingHeadlines(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(headline.id);
-        return newSet;
+      // Upload to Firebase Storage
+      const videoRef = ref(storage, `animations/${headline.id}.mp4`);
+      await uploadBytes(videoRef, videoBlob, {
+        contentType: 'video/mp4'
       });
+      
+      // Get the download URL
+      const videoUrl = await getDownloadURL(videoRef);
+      
+      // Update the Firebase document with our stored video URL
       await updateDoc(doc(db, 'headlines', headline.id), {
-        isAnimating: false
+        animationUrl: videoUrl
       });
     }
-  };
-
+    
+  } catch (error) {
+    console.error('Animation error:', error);
+    alert('Failed to animate image. Please try again.');
+  } finally {
+    setAnimatingHeadlines(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(headline.id);
+      return newSet;
+    });
+    await updateDoc(doc(db, 'headlines', headline.id), {
+      isAnimating: false
+    });
+  }
+};
   const newestHeadline = headlines[0];
   const otherHeadlines = headlines.slice(1, 11);
 
