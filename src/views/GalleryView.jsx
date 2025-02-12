@@ -384,7 +384,7 @@ function GalleryView() {
       </main>
 
       <footer className="gallery-footer">
-        <img src="qr-code.png" alt="QR Code" className="qr-code" />
+        <img src="/qr-code.png" alt="QR Code" className="qr-code" />
         <button 
           onClick={clearAllHeadlines}
           disabled={isClearing || headlines.length === 0}

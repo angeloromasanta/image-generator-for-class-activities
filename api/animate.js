@@ -21,7 +21,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         promptImage,
         promptText,
-        model: 'gen3a_turbo'
+        model: 'gen3a_turbo',
+        duration: 5
       })
     });
 
