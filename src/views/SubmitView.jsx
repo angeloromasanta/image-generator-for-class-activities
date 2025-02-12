@@ -1,17 +1,14 @@
-
 // SubmitView.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 
-// Model configurations
 const MODELS = {
   imagen: {
     id: 'google/imagen-3-fast',
-    config: {
-      size: "1365x1024"
-    }
+    config: { size: "1365x1024" }
   },
   flux: {
     id: 'black-forest-labs/flux-1.1-pro',
@@ -27,32 +24,12 @@ const MODELS = {
 
 function SubmitView() {
   const [headline, setHeadline] = useState('');
+  const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   
-  // Currently using Flux model
   const selectedModel = MODELS.flux;
-
-  const convertImageUrlToBase64 = async (imageUrl) => {
-    try {
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error('Failed to fetch image');
-      }
-
-      const blob = await response.blob();
-
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      throw new Error('Failed to convert image to base64: ' + error.message);
-    }
-  };
 
   const generateAndStoreImage = async () => {
     try {
@@ -61,7 +38,6 @@ function SubmitView() {
       
       const enhancedPrompt = `Generate a vivid, realistic image depicting this future scenario: "${headline}". Make it detailed and imaginative, focusing on the key elements of the scene.`;
       
-      // Generate image using API with model configuration
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,15 +58,22 @@ function SubmitView() {
       const data = await response.json();
 
       if (data.output && typeof data.output === 'string') {
-        const base64Image = await convertImageUrlToBase64(data.output);
+        // Upload image to Firebase Storage
+        const storageRef = ref(storage, `headlines/${Date.now()}_${headline.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`);
+        await uploadString(storageRef, data.output, 'data_url');
+        const imageUrl = await getDownloadURL(storageRef);
 
+        // Store metadata in Firestore
         await addDoc(collection(db, 'headlines'), {
           headline,
-          imageData: base64Image,
-          timestamp: Timestamp.now()
+          teamName,
+          imageUrl,
+          timestamp: Timestamp.now(),
+          isAnimating: false
         });
 
         setHeadline('');
+        setTeamName('');
       } else {
         throw new Error('No image URL in response');
       }
@@ -114,9 +97,19 @@ function SubmitView() {
           />
         </div>
 
+        <div className="input-group">
+          <label>Team Name</label>
+          <input
+            type="text"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            placeholder="Enter your team name"
+          />
+        </div>
+
         <button
           onClick={generateAndStoreImage}
-          disabled={loading || !headline}
+          disabled={loading || !headline || !teamName}
           className="submit-button"
         >
           {loading ? 'Generating...' : 'Generate Vision'}
@@ -128,5 +121,4 @@ function SubmitView() {
     </div>
   );
 }
-
 export default SubmitView;
