@@ -188,5 +188,4 @@ function AudienceGalleryView() {
     </div>
   );
 }
-
 export default AudienceGalleryView;
