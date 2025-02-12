@@ -1,4 +1,4 @@
-// Create a new file: pages/api/check-animation.js
+// pages/api/check-animation.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -11,24 +11,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://api.dev.runwayml.com/v1/image_to_video/${id}`, {
+    const statusResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${id}`, {
       headers: {
         'Authorization': `Bearer ${process.env.RUNWAYML_API_SECRET}`,
         'X-Runway-Version': '2024-11-06'
       }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    if (!statusResponse.ok) {
+      const error = await statusResponse.json();
       console.error('Runway API Error:', error);
-      return res.status(response.status).json(error);
+      return res.status(statusResponse.status).json(error);
     }
 
-    const result = await response.json();
+    const taskResult = await statusResponse.json();
 
-    if (result.status === 'SUCCEEDED' && result.output?.[0]) {
-      // Download the video from Runway
-      const videoResponse = await fetch(result.output[0]);
+    if (taskResult.status === 'SUCCEEDED' && taskResult.output?.[0]) {
+      // Download the video from the output URL
+      const videoResponse = await fetch(taskResult.output[0]);
       if (!videoResponse.ok) {
         throw new Error('Failed to download video from Runway');
       }
@@ -40,10 +40,17 @@ export default async function handler(req, res) {
         videoData: Buffer.from(videoBuffer).toString('base64'),
         contentType: 'video/mp4'
       });
-    } else if (result.status === 'FAILED') {
+    } else if (taskResult.status === 'FAILED') {
       return res.status(200).json({ status: 'failed' });
-    } else {
+    } else if (taskResult.status === 'PENDING' || taskResult.status === 'RUNNING') {
+      // Still processing
       return res.status(200).json({ status: 'processing' });
+    } else {
+      // Unknown status
+      return res.status(200).json({ 
+        status: 'failed',
+        message: `Unexpected status: ${taskResult.status}`
+      });
     }
   } catch (error) {
     console.error('Server Error:', error);
