@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': process.env.RUNWAYML_API_SECRET,
+          'Authorization': `Bearer ${process.env.RUNWAYML_API_SECRET}`,
           'X-Runway-Version': '2024-11-06'
         },
         body: JSON.stringify({
