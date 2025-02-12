@@ -1,8 +1,7 @@
-// SubmitView.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
 const MODELS = {
@@ -57,37 +56,43 @@ function SubmitView() {
 
       const data = await response.json();
 
-      if (data.output && typeof data.output === 'string') {
-        // Convert the image URL to a proper data URL
-        const response = await fetch(data.output);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        
-        const dataUrl = await new Promise((resolve, reject) => {
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-
-        // Upload image to Firebase Storage
-        const storageRef = ref(storage, `headlines/${Date.now()}_${headline.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`);
-        await uploadString(storageRef, dataUrl, 'data_url');
-        const imageUrl = await getDownloadURL(storageRef);
-
-        // Store metadata in Firestore
-        await addDoc(collection(db, 'headlines'), {
-          headline,
-          teamName,
-          imageUrl,
-          timestamp: Timestamp.now(),
-          isAnimating: false
-        });
-
-        setHeadline('');
-        setTeamName('');
-      } else {
+      if (!data.output || typeof data.output !== 'string') {
         throw new Error('No image URL in response');
       }
+
+      // Fetch the image from the API response URL
+      const imageResponse = await fetch(data.output);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to fetch image from API');
+      }
+      
+      // Get the blob directly
+      const blob = await imageResponse.blob();
+      
+      // Create storage reference with .webp extension
+      const filename = `headlines/${Date.now()}_${headline.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webp`;
+      const storageRef = ref(storage, filename);
+      
+      // Upload the blob directly to Firebase Storage
+      await uploadBytes(storageRef, blob, {
+        contentType: 'image/webp'
+      });
+      
+      // Get the download URL
+      const imageUrl = await getDownloadURL(storageRef);
+
+      // Store metadata in Firestore
+      await addDoc(collection(db, 'headlines'), {
+        headline,
+        teamName,
+        imageUrl,
+        timestamp: Timestamp.now(),
+        isAnimating: false
+      });
+
+      setHeadline('');
+      setTeamName('');
+      
     } catch (err) {
       setError(err.message);
     } finally {

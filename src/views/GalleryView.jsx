@@ -1,5 +1,3 @@
-
-
 // GalleryView.jsx
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, writeBatch, doc, updateDoc } from 'firebase/firestore';
