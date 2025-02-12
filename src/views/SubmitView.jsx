@@ -1,5 +1,3 @@
-
-// views/SubmitView.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
@@ -11,6 +9,29 @@ function SubmitView() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const convertImageUrlToBase64 = async (imageUrl) => {
+    try {
+      // Fetch the image from the temporary URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+
+      // Get the image as a blob
+      const blob = await response.blob();
+
+      // Convert blob to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      throw new Error('Failed to convert image to base64: ' + error.message);
+    }
+  };
+
   const generateAndStoreImage = async () => {
     try {
       setLoading(true);
@@ -18,6 +39,7 @@ function SubmitView() {
       
       const enhancedPrompt = `Generate a vivid, realistic image depicting this future scenario: "${headline}". Make it detailed and imaginative, focusing on the key elements of the scene.`;
       
+      // Generate image using API
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,9 +59,13 @@ function SubmitView() {
       const data = await response.json();
 
       if (data.output && typeof data.output === 'string') {
+        // Convert the temporary URL to base64
+        const base64Image = await convertImageUrlToBase64(data.output);
+
+        // Store the base64 string in Firestore
         await addDoc(collection(db, 'headlines'), {
           headline,
-          imageUrl: data.output,
+          imageData: base64Image, // Store base64 string instead of URL
           timestamp: Timestamp.now()
         });
 
@@ -57,13 +83,6 @@ function SubmitView() {
 
   return (
     <div className="submit-container">
-      <header>
-        <h1>Future Headlines Generator</h1>
-        <nav>
-          <a href="/gallery" className="gallery-link">View Gallery</a>
-        </nav>
-      </header>
-
       <main className="submit-form">
         <div className="input-group">
           <label>What headline do you see in the future?</label>

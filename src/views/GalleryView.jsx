@@ -1,12 +1,10 @@
-
-
-// views/GalleryView.jsx
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, writeBatch, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 function GalleryView() {
   const [headlines, setHeadlines] = useState([]);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -26,15 +24,48 @@ function GalleryView() {
     return () => unsubscribe();
   }, []);
 
+  const clearAllHeadlines = async () => {
+    if (!window.confirm('Are you sure you want to clear all headlines? This cannot be undone.')) {
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      const batch = writeBatch(db);
+      
+      headlines.forEach((headline) => {
+        const docRef = doc(db, 'headlines', headline.id);
+        batch.delete(docRef);
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error('Error clearing headlines:', error);
+      alert('Failed to clear headlines. Please try again.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const newestHeadline = headlines[0];
-  const otherHeadlines = headlines.slice(1, 11); // Get next 10 headlines
+  const otherHeadlines = headlines.slice(1, 11);
 
   return (
     <div className="gallery-container">
-      <header>
-        <h1>Future Headlines Gallery</h1>
-        <nav>
-          <a href="/" className="submit-link">Submit New Headline</a>
+      <header className="newspaper-header">
+        <div className="header-content">
+          <h1>The Future Times</h1>
+          <div className="header-date">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </div>
+        </div>
+        <nav className="header-nav">
+          <a href="/" className="submit-link">Submit Breaking News</a>
         </nav>
       </header>
 
@@ -42,18 +73,24 @@ function GalleryView() {
         {newestHeadline && (
           <article className="featured-headline">
             <div className="headline-image">
-              <img src={newestHeadline.imageUrl} alt={newestHeadline.headline} />
+              <img 
+                src={newestHeadline.imageData}
+                alt={newestHeadline.headline}
+              />
               <div className="headline-overlay">
-                <h2>{newestHeadline.headline}</h2>
-                <time>
-                  {newestHeadline.timestamp.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </time>
+                <div className="headline-content">
+                  <span className="breaking-news">Breaking News</span>
+                  <h2>{newestHeadline.headline}</h2>
+                  <time>
+                    {newestHeadline.timestamp.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </time>
+                </div>
               </div>
             </div>
           </article>
@@ -62,22 +99,43 @@ function GalleryView() {
         {otherHeadlines.map((item) => (
           <article key={item.id} className="headline-card">
             <div className="headline-image">
-              <img src={item.imageUrl} alt={item.headline} />
+              <img 
+                src={item.imageData}
+                alt={item.headline}
+              />
               <div className="headline-overlay">
-                <h2>{item.headline}</h2>
-                <time>
-                  {item.timestamp.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </time>
+                <div className="headline-content">
+                  <h2>{item.headline}</h2>
+                  <time>
+                    {item.timestamp.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </time>
+                </div>
               </div>
             </div>
           </article>
         ))}
+
+        {headlines.length === 0 && (
+          <div className="empty-state">
+            No headlines yet. Be the first to make history!
+          </div>
+        )}
       </main>
+
+      <footer className="gallery-footer">
+        <button 
+          onClick={clearAllHeadlines}
+          disabled={isClearing || headlines.length === 0}
+          className="clear-button"
+        >
+          {isClearing ? 'Clearing Archives...' : 'Clear All Headlines'}
+        </button>
+      </footer>
     </div>
   );
 }
