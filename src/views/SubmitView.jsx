@@ -58,9 +58,20 @@ function SubmitView() {
       const data = await response.json();
 
       if (data.output && typeof data.output === 'string') {
+        // Convert the image URL to a proper data URL
+        const response = await fetch(data.output);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        
+        const dataUrl = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
         // Upload image to Firebase Storage
         const storageRef = ref(storage, `headlines/${Date.now()}_${headline.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`);
-        await uploadString(storageRef, data.output, 'data_url');
+        await uploadString(storageRef, dataUrl, 'data_url');
         const imageUrl = await getDownloadURL(storageRef);
 
         // Store metadata in Firestore
@@ -121,4 +132,5 @@ function SubmitView() {
     </div>
   );
 }
+
 export default SubmitView;

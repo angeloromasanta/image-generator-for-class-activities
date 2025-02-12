@@ -1,4 +1,5 @@
 
+
 // GalleryView.jsx
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, writeBatch, doc, updateDoc } from 'firebase/firestore';
@@ -29,41 +30,43 @@ function GalleryView() {
     return () => unsubscribe();
   }, []);
 
-  
-const clearAllHeadlines = async () => {
-  if (!window.confirm('Are you sure you want to clear all headlines? This cannot be undone.')) {
-    return;
-  }
+  const clearAllHeadlines = async () => {
+    if (!window.confirm('Are you sure you want to clear all headlines? This cannot be undone.')) {
+      return;
+    }
 
-  setIsClearing(true);
-  try {
-    const batch = writeBatch(db);
-    
-    // Delete documents from Firestore without trying to delete from storage
-    // since the old entries use base64 strings
-    headlines.forEach((headline) => {
-      const docRef = doc(db, 'headlines', headline.id);
-      batch.delete(docRef);
-    });
+    setIsClearing(true);
+    try {
+      const batch = writeBatch(db);
+      
+      // Delete images from Storage and documents from Firestore
+      await Promise.all(headlines.map(async (headline) => {
+        const imageRef = ref(storage, headline.imageUrl);
+        await deleteObject(imageRef);
+        const docRef = doc(db, 'headlines', headline.id);
+        batch.delete(docRef);
+      }));
 
-    await batch.commit();
-  } catch (error) {
-    console.error('Error clearing headlines:', error);
-    alert('Failed to clear headlines. Please try again.');
-  } finally {
-    setIsClearing(false);
-  }
-};
+      await batch.commit();
+    } catch (error) {
+      console.error('Error clearing headlines:', error);
+      alert('Failed to clear headlines. Please try again.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
-const removeHeadline = async (id) => {
-  try {
-    // Just delete from Firestore for now
-    await writeBatch(db).delete(doc(db, 'headlines', id)).commit();
-  } catch (error) {
-    console.error('Error removing headline:', error);
-    alert('Failed to remove headline. Please try again.');
-  }
-};
+  const removeHeadline = async (id, imageUrl) => {
+    try {
+      const imageRef = ref(storage, imageUrl);
+      await deleteObject(imageRef);
+      await writeBatch(db).delete(doc(db, 'headlines', id)).commit();
+    } catch (error) {
+      console.error('Error removing headline:', error);
+      alert('Failed to remove headline. Please try again.');
+    }
+  };
+
   const animateImage = async (headline) => {
     if (animatingHeadlines.has(headline.id)) return;
     
