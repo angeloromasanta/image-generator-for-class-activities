@@ -5,6 +5,7 @@ import { db } from '../firebase';
 function GalleryView() {
   const [headlines, setHeadlines] = useState([]);
   const [isClearing, setIsClearing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const q = query(
@@ -47,6 +48,19 @@ function GalleryView() {
     }
   };
 
+  const removeHeadline = async (id) => {
+    try {
+      await writeBatch(db).delete(doc(db, 'headlines', id)).commit();
+    } catch (error) {
+      console.error('Error removing headline:', error);
+      alert('Failed to remove headline. Please try again.');
+    }
+  };
+
+  const handleImageClick = (imageData) => {
+    setSelectedImage(imageData);
+  };
+
   const newestHeadline = headlines[0];
   const otherHeadlines = headlines.slice(1, 11);
 
@@ -54,7 +68,7 @@ function GalleryView() {
     <div className="gallery-container">
       <header className="newspaper-header">
         <div className="header-content">
-          <h1>The Future Times</h1>
+          <h1>The Future Times @ Esade</h1>
           <div className="header-date">
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
@@ -64,18 +78,26 @@ function GalleryView() {
             })}
           </div>
         </div>
-        <nav className="header-nav">
-          <a href="/" className="submit-link">Submit Breaking News</a>
-        </nav>
       </header>
 
       <main className="gallery-grid">
         {newestHeadline && (
           <article className="featured-headline">
+            <button 
+              className="remove-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeHeadline(newestHeadline.id);
+              }}
+            >
+              ×
+            </button>
             <div className="headline-image">
               <img 
                 src={newestHeadline.imageData}
                 alt={newestHeadline.headline}
+                onClick={() => handleImageClick(newestHeadline.imageData)}
+                style={{ cursor: 'pointer' }}
               />
               <div className="headline-overlay">
                 <div className="headline-content">
@@ -98,10 +120,21 @@ function GalleryView() {
 
         {otherHeadlines.map((item) => (
           <article key={item.id} className="headline-card">
+            <button 
+              className="remove-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeHeadline(item.id);
+              }}
+            >
+              ×
+            </button>
             <div className="headline-image">
               <img 
                 src={item.imageData}
                 alt={item.headline}
+                onClick={() => handleImageClick(item.imageData)}
+                style={{ cursor: 'pointer' }}
               />
               <div className="headline-overlay">
                 <div className="headline-content">
@@ -136,6 +169,12 @@ function GalleryView() {
           {isClearing ? 'Clearing Archives...' : 'Clear All Headlines'}
         </button>
       </footer>
+
+      {selectedImage && (
+        <div className="modal-overlay" onClick={() => setSelectedImage(null)}>
+          <img src={selectedImage} alt="Expanded view" className="modal-image" />
+        </div>
+      )}
     </div>
   );
 }

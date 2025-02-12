@@ -91,7 +91,6 @@ function SubmitView() {
         });
 
         setHeadline('');
-        navigate('/gallery');
       } else {
         throw new Error('No image URL in response');
       }
