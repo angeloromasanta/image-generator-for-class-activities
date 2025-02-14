@@ -24,11 +24,6 @@ function AudienceView() {
     return () => unsubscribe();
   }, []);
 
-  const handleMediaClick = (e, media) => {
-    e.stopPropagation();
-    setSelectedMedia(media);
-  };
-
   const newestHeadline = headlines[0];
   const otherHeadlines = headlines.slice(1);
 
@@ -52,32 +47,38 @@ function AudienceView() {
         {newestHeadline && (
           <article className="mb-8 bg-white rounded-lg shadow-md overflow-hidden">
             <div className="relative aspect-video">
-              <div 
-                className="cursor-pointer w-full h-full"
-                onClick={(e) => handleMediaClick(e, {
-                  url: newestHeadline.animationUrl || newestHeadline.imageUrl,
-                  type: newestHeadline.animationUrl ? 'video' : 'image'
-                })}
-              >
-                {newestHeadline.animationUrl ? (
-                  <video 
-                    src={newestHeadline.animationUrl}
-                    alt={newestHeadline.headline}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img 
-                    src={newestHeadline.imageUrl}
-                    alt={newestHeadline.headline}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+              {newestHeadline.animationUrl ? (
+                <video 
+                  src={newestHeadline.animationUrl}
+                  alt={newestHeadline.headline}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedMedia({
+                      url: newestHeadline.animationUrl,
+                      type: 'video'
+                    });
+                  }}
+                />
+              ) : (
+                <img 
+                  src={newestHeadline.imageUrl}
+                  alt={newestHeadline.headline}
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedMedia({
+                      url: newestHeadline.imageUrl,
+                      type: 'image'
+                    });
+                  }}
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
                 <div className="absolute bottom-0 p-4 text-white">
                   <span className="inline-block px-2 py-1 bg-red-600 text-sm font-bold rounded mb-2">
                     Breaking News
@@ -105,32 +106,38 @@ function AudienceView() {
           {otherHeadlines.map((item) => (
             <article key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative aspect-video">
-                <div 
-                  className="cursor-pointer w-full h-full"
-                  onClick={(e) => handleMediaClick(e, {
-                    url: item.animationUrl || item.imageUrl,
-                    type: item.animationUrl ? 'video' : 'image'
-                  })}
-                >
-                  {item.animationUrl ? (
-                    <video 
-                      src={item.animationUrl}
-                      alt={item.headline}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <img 
-                      src={item.imageUrl}
-                      alt={item.headline}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+                {item.animationUrl ? (
+                  <video 
+                    src={item.animationUrl}
+                    alt={item.headline}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMedia({
+                        url: item.animationUrl,
+                        type: 'video'
+                      });
+                    }}
+                  />
+                ) : (
+                  <img 
+                    src={item.imageUrl}
+                    alt={item.headline}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMedia({
+                        url: item.imageUrl,
+                        type: 'image'
+                      });
+                    }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
                   <div className="absolute bottom-0 p-4 text-white">
                     <h2 className="text-lg font-bold mb-2">{item.headline}</h2>
                     <div className="flex flex-col text-sm opacity-90 space-y-1">
