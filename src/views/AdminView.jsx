@@ -3,7 +3,7 @@ import { collection, query, orderBy, onSnapshot, writeBatch, doc, updateDoc } fr
 import { ref, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
-function GalleryView() {
+function AdminView() {
   const [headlines, setHeadlines] = useState([]);
   const [isClearing, setIsClearing] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -430,4 +430,4 @@ function GalleryView() {
   );
 }
 
-export default GalleryView;
+export default AdminView;

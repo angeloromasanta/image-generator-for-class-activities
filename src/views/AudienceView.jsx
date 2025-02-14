@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
-function AudienceGalleryView() {
+function AudienceView() {
   const [headlines, setHeadlines] = useState([]);
   const [selectedMedia, setSelectedMedia] = useState(null);
 
@@ -47,31 +47,31 @@ function AudienceGalleryView() {
         {newestHeadline && (
           <article className="mb-8 bg-white rounded-lg shadow-md overflow-hidden">
             <div className="relative aspect-video">
-              {newestHeadline.animationUrl ? (
-                <video 
-                  src={newestHeadline.animationUrl}
-                  alt={newestHeadline.headline}
-                  onClick={() => setSelectedMedia({
-                    url: newestHeadline.animationUrl,
-                    type: 'video'
-                  })}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img 
-                  src={newestHeadline.imageUrl}
-                  alt={newestHeadline.headline}
-                  onClick={() => setSelectedMedia({
-                    url: newestHeadline.imageUrl,
-                    type: 'image'
-                  })}
-                  className="w-full h-full object-cover"
-                />
-              )}
+              <div 
+                className="cursor-pointer w-full h-full"
+                onClick={() => setSelectedMedia({
+                  url: newestHeadline.animationUrl || newestHeadline.imageUrl,
+                  type: newestHeadline.animationUrl ? 'video' : 'image'
+                })}
+              >
+                {newestHeadline.animationUrl ? (
+                  <video 
+                    src={newestHeadline.animationUrl}
+                    alt={newestHeadline.headline}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={newestHeadline.imageUrl}
+                    alt={newestHeadline.headline}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                 <div className="absolute bottom-0 p-4 text-white">
                   <span className="inline-block px-2 py-1 bg-red-600 text-sm font-bold rounded mb-2">
@@ -100,31 +100,31 @@ function AudienceGalleryView() {
           {otherHeadlines.map((item) => (
             <article key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative aspect-video">
-                {item.animationUrl ? (
-                  <video 
-                    src={item.animationUrl}
-                    alt={item.headline}
-                    onClick={() => setSelectedMedia({
-                      url: item.animationUrl,
-                      type: 'video'
-                    })}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img 
-                    src={item.imageUrl}
-                    alt={item.headline}
-                    onClick={() => setSelectedMedia({
-                      url: item.imageUrl,
-                      type: 'image'
-                    })}
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                <div 
+                  className="cursor-pointer w-full h-full"
+                  onClick={() => setSelectedMedia({
+                    url: item.animationUrl || item.imageUrl,
+                    type: item.animationUrl ? 'video' : 'image'
+                  })}
+                >
+                  {item.animationUrl ? (
+                    <video 
+                      src={item.animationUrl}
+                      alt={item.headline}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img 
+                      src={item.imageUrl}
+                      alt={item.headline}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                   <div className="absolute bottom-0 p-4 text-white">
                     <h2 className="text-lg font-bold mb-2">{item.headline}</h2>
@@ -155,7 +155,7 @@ function AudienceGalleryView() {
 
       {selectedMedia && (
         <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer"
           onClick={() => setSelectedMedia(null)}
         >
           <div className="relative max-w-4xl w-full">
@@ -188,4 +188,5 @@ function AudienceGalleryView() {
     </div>
   );
 }
-export default AudienceGalleryView;
+
+export default AudienceView;
