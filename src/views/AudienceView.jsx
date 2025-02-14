@@ -24,6 +24,11 @@ function AudienceView() {
     return () => unsubscribe();
   }, []);
 
+  const handleMediaClick = (e, media) => {
+    e.stopPropagation();
+    setSelectedMedia(media);
+  };
+
   const newestHeadline = headlines[0];
   const otherHeadlines = headlines.slice(1);
 
@@ -49,7 +54,7 @@ function AudienceView() {
             <div className="relative aspect-video">
               <div 
                 className="cursor-pointer w-full h-full"
-                onClick={() => setSelectedMedia({
+                onClick={(e) => handleMediaClick(e, {
                   url: newestHeadline.animationUrl || newestHeadline.imageUrl,
                   type: newestHeadline.animationUrl ? 'video' : 'image'
                 })}
@@ -102,7 +107,7 @@ function AudienceView() {
               <div className="relative aspect-video">
                 <div 
                   className="cursor-pointer w-full h-full"
-                  onClick={() => setSelectedMedia({
+                  onClick={(e) => handleMediaClick(e, {
                     url: item.animationUrl || item.imageUrl,
                     type: item.animationUrl ? 'video' : 'image'
                   })}
@@ -154,37 +159,40 @@ function AudienceView() {
       </main>
 
       {selectedMedia && (
-  <div 
-    className="modal-overlay fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer"
-    onClick={() => setSelectedMedia(null)}
-  >
-    <div className="modal-content relative max-w-4xl w-full">
-      <button 
-        className="modal-close absolute -top-10 right-0 text-white text-3xl"
-        onClick={() => setSelectedMedia(null)}
-      >
-        ×
-      </button>
-      {selectedMedia.type === 'video' ? (
-        <video 
-          src={selectedMedia.url} 
-          className="modal-video w-full h-auto max-h-[80vh]"
-          autoPlay
-          loop
-          controls
-          onClick={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <img 
-          src={selectedMedia.url} 
-          alt="Expanded view" 
-          className="modal-image w-full h-auto max-h-[80vh] object-contain"
-          onClick={(e) => e.stopPropagation()}
-        />
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedMedia(null)}
+        >
+          <div className="relative max-w-4xl w-full">
+            <button 
+              className="absolute -top-10 right-0 text-white text-3xl"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedMedia(null);
+              }}
+            >
+              ×
+            </button>
+            {selectedMedia.type === 'video' ? (
+              <video 
+                src={selectedMedia.url} 
+                className="w-full h-auto max-h-[80vh]"
+                autoPlay
+                loop
+                controls
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img 
+                src={selectedMedia.url} 
+                alt="Expanded view" 
+                className="w-full h-auto max-h-[80vh] object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
     </div>
   );
 }
