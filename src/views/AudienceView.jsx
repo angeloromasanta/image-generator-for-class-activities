@@ -154,37 +154,37 @@ function AudienceView() {
       </main>
 
       {selectedMedia && (
-        <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer"
-          onClick={() => setSelectedMedia(null)}
-        >
-          <div className="relative max-w-4xl w-full">
-            <button 
-              className="absolute -top-10 right-0 text-white text-3xl"
-              onClick={() => setSelectedMedia(null)}
-            >
-              ×
-            </button>
-            {selectedMedia.type === 'video' ? (
-              <video 
-                src={selectedMedia.url} 
-                className="w-full h-auto max-h-[80vh]"
-                autoPlay
-                loop
-                controls
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <img 
-                src={selectedMedia.url} 
-                alt="Expanded view" 
-                className="w-full h-auto max-h-[80vh] object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-          </div>
-        </div>
+  <div 
+    className="modal-overlay fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer"
+    onClick={() => setSelectedMedia(null)}
+  >
+    <div className="modal-content relative max-w-4xl w-full">
+      <button 
+        className="modal-close absolute -top-10 right-0 text-white text-3xl"
+        onClick={() => setSelectedMedia(null)}
+      >
+        ×
+      </button>
+      {selectedMedia.type === 'video' ? (
+        <video 
+          src={selectedMedia.url} 
+          className="modal-video w-full h-auto max-h-[80vh]"
+          autoPlay
+          loop
+          controls
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <img 
+          src={selectedMedia.url} 
+          alt="Expanded view" 
+          className="modal-image w-full h-auto max-h-[80vh] object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
       )}
+    </div>
+  </div>
+)}
     </div>
   );
 }
