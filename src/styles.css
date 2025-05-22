@@ -67,12 +67,14 @@ body {
 }
 
 /* Gallery Grid */
+/* Gallery Grid */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  /* grid-template-rows: repeat(2, 1fr); */ /* REMOVE THIS LINE */
+  grid-auto-rows: 350px; /* ADD THIS LINE - Adjust 350px to your desired card height */
   gap: 1rem;
-  height: calc(100vh - 250px);
+  /* height: calc(100vh - 250px); */ /* REMOVE THIS LINE to allow the grid to grow vertically */
   padding: 0 2rem;
   margin-bottom: 2rem;
 }
@@ -100,22 +102,26 @@ body {
   transform: translateY(-5px);
 }
 
-.headline-image {
-  position: relative;
+.headline-image img {
+  position: absolute; /* ADD THIS */
+  top: 0;             /* ADD THIS */
+  left: 0;            /* ADD THIS */
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  display: block; /* You can keep this, or remove it; absolute positioning often implies block-like behavior */
 }
 
-.headline-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 .headline-video {
+  position: absolute; /* ADD THIS */
+  top: 0;             /* ADD THIS */
+  left: 0;            /* ADD THIS */
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block; /* You can keep this, or remove it */
 }
+
 
 .headline-overlay {
   position: absolute;
